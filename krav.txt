@@ -1,0 +1,1 @@
+pyserial (versjon 3.5)
