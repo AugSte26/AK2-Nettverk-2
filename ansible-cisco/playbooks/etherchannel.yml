@@ -1,0 +1,13 @@
+---
+- name: Configure EtherChannel
+  hosts: switches
+  gather_facts: no
+
+  tasks:
+
+    - name: Configure Port Channel
+      cisco.ios.ios_config:
+        parents:
+          - interface range fa0/2 - 3
+        lines:
+          - channel-group 1 mode active

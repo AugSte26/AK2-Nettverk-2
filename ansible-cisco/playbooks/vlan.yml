@@ -1,0 +1,18 @@
+---
+- name: Create VLANs
+  hosts: switches
+  gather_facts: no
+
+  tasks:
+
+    - name: Create User VLAN
+      cisco.ios.ios_config:
+        lines:
+          - vlan {{ vlan_user }}
+          - name {{ vlan_user_name }}
+
+    - name: Create Management VLAN
+      cisco.ios.ios_config:
+        lines:
+          - vlan {{ vlan_mgmt }}
+          - name {{ vlan_mgmt_name }}

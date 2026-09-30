@@ -1,0 +1,7 @@
+domain_name: skole.local
+
+vlan_user: 10
+vlan_user_name: USERS
+
+vlan_mgmt: 99
+vlan_mgmt_name: MGMT

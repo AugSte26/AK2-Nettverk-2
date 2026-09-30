@@ -1,0 +1,11 @@
+---
+- name: Configure hostname
+  hosts: all
+  gather_facts: no
+
+  tasks:
+
+    - name: Set hostname
+      cisco.ios.ios_config:
+        lines:
+          - hostname {{ inventory_hostname }}
