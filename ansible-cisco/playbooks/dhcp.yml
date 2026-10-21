@@ -1,27 +1,35 @@
 ---
-- name: Konfigurer DHCP på test-routeren
-  hosts: test_routers
+- name: Konfigurer DHCP på Cisco-routere
+  hosts: routers
   gather_facts: false
 
   tasks:
-    # Reserverer gateway og de første adressene,
-    # slik at DHCP ikke deler dem ut til klienter.
+    # Reserverer gateway og andre adresser som ikke skal deles ut.
     - name: Ekskluder reserverte DHCP-adresser
       cisco.ios.ios_config:
         lines:
-          - "ip dhcp excluded-address 192.168.98.1 192.168.98.20"
+          - >-
+            ip dhcp excluded-address
+            {{ item.excluded_start }}
+            {{ item.excluded_end }}
+      loop: "{{ user_vlans }}"
+      loop_control:
+        label: "{{ item.dhcp_pool_name }}"
 
-    # Oppretter DHCP-pool for klientnettet.
-    - name: Opprett DHCP-pool VLAN98
+    # Oppretter én DHCP-pool for hvert VLAN i variabelfilen.
+    - name: Opprett DHCP-pool
       cisco.ios.ios_config:
         parents:
-          - "ip dhcp pool VLAN98"
+          - "ip dhcp pool {{ item.dhcp_pool_name }}"
         lines:
-          - "network 192.168.98.0 255.255.255.0"
-          - "default-router 192.168.98.1"
-          - "dns-server 8.8.8.8"
+          - "network {{ item.network }} {{ item.mask }}"
+          - "default-router {{ item.gateway }}"
+          - "dns-server {{ item.dns_server }}"
+      loop: "{{ user_vlans }}"
+      loop_control:
+        label: "{{ item.dhcp_pool_name }}"
 
-    # Lagrer running-config til startup-config.
+    # Lagrer running-config til startup-config hvis noe ble endret.
     - name: Lagre konfigurasjonen
       cisco.ios.ios_config:
         save_when: modified
