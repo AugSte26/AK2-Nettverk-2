@@ -1,12 +1,18 @@
-domain_name: skole.local
+---
+management_vlan:
+  id: 99
+  name: MGMT
+  network: 192.168.99.0
+  mask: 255.255.255.0
+  gateway: 192.168.99.1
 
-mgmt_vlan: 99
-mgmt_vlan_name: MGMT
-
-user_vlan: 98
-user_vlan_name: USERS
-
-dhcp_network: 192.168.98.0
-dhcp_mask: 255.255.255.0
-dhcp_gateway: 192.168.98.1
-dns_server: 8.8.8.8
+user_vlans:
+  - id: 98
+    name: USERS98
+    network: 192.168.98.0
+    mask: 255.255.255.0
+    gateway: 192.168.98.1
+    dhcp_pool_name: VLAN98
+    dns_server: 8.8.8.8
+    excluded_start: 192.168.98.1
+    excluded_end: 192.168.98.20
