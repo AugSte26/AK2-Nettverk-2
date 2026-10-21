@@ -1,5 +1,5 @@
 ---
-- name: Configure hostname
+- name: Configure Hostnames
   hosts: all
   gather_facts: no
 
@@ -8,4 +8,4 @@
     - name: Set hostname
       cisco.ios.ios_config:
         lines:
-          - hostname {{ inventory_hostname }}
+          - "hostname {{ inventory_hostname }}"
