@@ -8,6 +8,6 @@
     - name: Configure Port Channel
       cisco.ios.ios_config:
         parents:
-          - interface range fa0/2 - 3
+          - interface range fa0/4 - 5
         lines:
           - channel-group 1 mode active
