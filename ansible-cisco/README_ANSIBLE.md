@@ -118,63 +118,136 @@ vlan_mgmt_name: MGMT
 
 
 ## Playbooks ##
+Kjøre Ansible-playbooks
+Alle kommandoene kjøres fra ansible-cisco-mappen i Ubuntu/WSL:
 
-# Kommandoer #
-For å konfigurere hostname på enhetene:
+cd /mnt/c/Users/lab/Desktop/AK2-Nettverk-2-main/ansible-cisco
+
+# Kontrollere inventory #
+Vis enhetene og gruppene som Ansible har funnet:
+
+ansible-inventory -i inventory.ini --graph
+
+# Teste forbindelsen #
+Kjør show version på alle enhetene:
+
+ansible all -i inventory.ini \
+-m cisco.ios.ios_command \
+-a "commands='show version'"
+Teste bare routerne:
+
+ansible routers -i inventory.ini \
+-m cisco.ios.ios_command \
+-a "commands='show version'"
+Teste bare switchene:
+
+ansible switches -i inventory.ini \
+-m cisco.ios.ios_command \
+-a "commands='show version'"
+
+## Kontrollere syntaksen ##
+Før en playbook kjøres, kan syntaksen kontrolleres:
+
+ansible-playbook -i inventory.ini playbooks/hostname.yml --syntax-check
+ansible-playbook -i inventory.ini playbooks/vlan.yml --syntax-check
+ansible-playbook -i inventory.ini playbooks/dhcp.yml --syntax-check
+ansible-playbook -i inventory.ini playbooks/etherchannel.yml --syntax-check
+
+
+## Hostname-playbook ##
+Konfigurerer hostname basert på enhetsnavnet i inventory.ini:
+
 ansible-playbook -i inventory.ini playbooks/hostname.yml
+Verifisering:
 
+ansible all -i inventory.ini \
+-m cisco.ios.ios_command \
+-a "commands='show running-config | include hostname'"
 
-For å opprette VLAN og konfigurere VLAN-relaterte innstillinger:
+## VLAN-playbook ##
+Oppretter management- og bruker-VLAN på switchene:
+
 ansible-playbook -i inventory.ini playbooks/vlan.yml
+Verifisering:
 
+ansible switches -i inventory.ini \
+-m cisco.ios.ios_command \
+-a "commands='show vlan brief'"
 
-For å opprette DHCP-pool for VLAN20:
+## DHCP-playbook ##
+# Konfigurerer DHCP på routerne: # 
+
 ansible-playbook -i inventory.ini playbooks/dhcp.yml
 
+# Verifiser DHCP-konfigurasjonen: #
 
-For å konfigurere EtherChannel forbindelser:
+ansible routers -i inventory.ini \
+-m cisco.ios.ios_command \
+-a "commands='show running-config | section dhcp'"
+
+# Vis DHCP-pool: #
+
+ansible routers -i inventory.ini \
+-m cisco.ios.ios_command \
+-a "commands='show ip dhcp pool'"
+
+# Vis tildelte DHCP-adresser: #
+
+ansible routers -i inventory.ini \
+-m cisco.ios.ios_command \
+-a "commands='show ip dhcp binding'"
+
+# DHCP-oppsettet bruker følgende nett: #
+
+Nett:             192.168.98.0/24
+Gateway:          192.168.98.1
+Ekskludert:       192.168.98.1–192.168.98.20
+Første klient-IP: 192.168.98.21
+DNS:              8.8.8.8
+DHCP ble testet med en Windows-klient. Klienten mottok adressen:
+
+192.168.98.21
+
+## EtherChannel-playbook ##
+EtherChannel-playbooken skal bare kjøres når begge switchene er koblet sammen med de planlagte kablene:
+
 ansible-playbook -i inventory.ini playbooks/etherchannel.yml
+Verifisering:
 
+ansible etherchannel_switches -i inventory.ini \
+-m cisco.ios.ios_command \
+-a "commands='show etherchannel summary'"
 
-# Testing av ansible #
+## Test av idempotens ##
+En playbook kjøres to ganger for å kontrollere at den er idempotent.
 
-Bruk kommandoen under for å teste ansible:
-ansible all -i inventory.ini -m cisco.ios.ios_command -a "commands='show version'"
+Eksempel:
 
-Får du tilbake denne informasjonen så funker disse funksjonene:
-- SSH
-- Inventory
-- Cisco Collection
-- Ansible
+ansible-playbook -i inventory.ini playbooks/dhcp.yml
+Når playbooken kjøres for andre gang, bør resultatet være:
 
+changed=0
+failed=0
+Dette betyr at Ansible oppdager at ønsket konfigurasjon allerede finnes, og derfor ikke utfører unødvendige endringer.
 
-## DHCP-plan ##
+## Viktig ved testing av DHCP ##
+Management-forbindelsen bruker nettverket:
 
-Router5 funker som DHCP-server for VLAN20
-192.168.20.21 - 192.168.20.254
+192.168.99.0/24
+Klient- og DHCP-nettet bruker:
 
-Gateway: 
-192.168.20.1
+192.168.98.0/24
+Hvis den samme Ethernet-adapteren brukes til begge nettene, vil Ansible miste forbindelsen til routerens management-IP når adapteren endres til DHCP.
 
-DNS:
-8.8.8.8
+Det anbefales derfor å bruke:
 
+Ethernet-adapter 1:
+Management-nett
+Statisk IP: 192.168.99.100/24
 
-## Vedlikehold ##
-
-Hvis du skal legge til nye enheter:
-
-1. Gi enheten management-IP
-2. Aktiver SSH
-3. Legg enheten inn i inventory.ini
-4. Kjør ønsket playbook.
-
-
-Hvis du endrer på VLAN eller andre konfigurasjoner som ikke er nevnt så må du oppdatere følgende:
-
-group_vars/all.yml
-
-da slipper du å endre på playbookene.
+Ethernet-adapter 2:
+DHCP-klientnett
+Automatisk IP-adresse
 
 
 ## Forfatter ##
