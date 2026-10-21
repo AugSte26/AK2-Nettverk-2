@@ -1,7 +1,12 @@
 domain_name: skole.local
 
-vlan_user: 10
-vlan_user_name: USERS
+mgmt_vlan: 99
+mgmt_vlan_name: MGMT
 
-vlan_mgmt: 99
-vlan_mgmt_name: MGMT
+user_vlan: 98
+user_vlan_name: USERS
+
+dhcp_network: 192.168.98.0
+dhcp_mask: 255.255.255.0
+dhcp_gateway: 192.168.98.1
+dns_server: 8.8.8.8
