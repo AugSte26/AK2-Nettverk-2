@@ -5,11 +5,11 @@
 
   tasks:
 
-    - name: Create DHCP Pool
+    - name: Configure DHCP Pool
       cisco.ios.ios_config:
         parents:
-          - ip dhcp pool VLAN10
+          - ip dhcp pool VLAN98
         lines:
-          - network 192.168.10.0 255.255.255.0
-          - default_router 192.168.10.1
-          - dns-server 8.8.8.8
+          - "network {{ dhcp_network }} {{ dhcp_mask }}"
+          - "default-router {{ dhcp_gateway }}"
+          - "dns-server {{ dns_server }}"
